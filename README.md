@@ -9,8 +9,9 @@ It is three static files (`index.html`, `styles.css`, `app.js`). There is no bui
 ## What it does
 
 - **Your brand:** logo or photo (image link or upload), or initials drawn in your accent colour; accent, name, details and line colours; font; text size; logo beside or above the details.
-- **Your details:** name, job title, company, tagline, phone, mobile, email, website, address, WeChat ID, six social links and a button link ("Book a call →").
-- **Affiliations:** up to five lines for the groups, networks or associations you belong to ("An independent member of …"), each with an optional link.
+- **Your details:** name, job title, company (linked to the website, so there is no separate website line), address, tagline, phone, mobile, email, WeChat ID, six social links and a button link ("Book a call →").
+- **Two languages:** one switch gives every text field a second box. Each line is followed by its translation, and the disclaimer gets a second paragraph; numbers, email and links are shared. Standard confidentiality notices in English, French, Chinese, Spanish and German.
+- **Affiliations:** up to five groups, networks or associations, in a footer under the signature. Each has optional text, link and logo; the logo's width and height can be set (24 px high by default, proportions kept unless unlocked), and logos without text line up side by side.
 - **Disclaimer:** free text under the signature, with a standard confidentiality notice one click away.
 - **Output:** copy as a ready-to-paste signature, copy the HTML, copy plain text, or download an `.html` file.
 - **Checks as you type:** Gmail's 10,000-character limit, uploaded images that Gmail will remove, image links that don't load, images too small for high-resolution screens.
@@ -47,8 +48,8 @@ python3 -m http.server 8000
 
 ## Customise
 
-- **Example details** shown on first visit: `EXAMPLE` at the top of `app.js`.
-- **Standard disclaimer:** `STANDARD_DISCLAIMER` in `app.js`.
+- **Example details** shown on first visit: `EXAMPLE` at the top of `app.js`. The example affiliation logo (`examples/affiliation-logo.png`) belongs to a made-up network.
+- **Standard disclaimers:** `NOTICES` in `app.js`, one entry per language.
 - **Fonts on offer:** `FONTS` in `app.js` and the `<select id="f-font">` in `index.html`.
 - **Social networks:** `SOCIALS` in `app.js` plus a matching input in `index.html`.
 - **The tool's own look:** colour tokens at the top of `styles.css`, light and dark.

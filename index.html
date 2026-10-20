@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Email Signature Generator</title>
-<meta name="description" content="Build an HTML email signature for Gmail, Outlook and Apple Mail with your own logo, colours and disclaimer. Free, and it runs in your browser: nothing is uploaded.">
+<meta name="description" content="Build an HTML email signature for Gmail, Outlook and Apple Mail with your own logo, colours, affiliations and disclaimer, in one or two languages. Free, and it runs in your browser: nothing is uploaded.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
@@ -17,7 +17,7 @@
       <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M7 20.5c2.6 0 3.4-9 6-9s1.4 9 4 9 2.6-5.5 4.6-5.5 1.4 3.5 3.4 3.5"/></svg>
       <h1 class="wordmark">Email signature generator</h1>
     </div>
-    <p class="lede">Build an HTML email signature for Gmail, Outlook and Apple Mail, with your own logo, colours and disclaimer. It runs in your browser: nothing you type is uploaded.</p>
+    <p class="lede">Build an HTML email signature for Gmail, Outlook and Apple Mail, with your own logo, colours, affiliations and disclaimer, in one or two languages. It runs in your browser: nothing you type is uploaded.</p>
   </header>
 
   <div class="notice" id="notice" role="status" hidden>
@@ -74,7 +74,7 @@
         <div class="team">
           <div>
             <h3>Brand link for your team</h3>
-            <p>Opens this page with your logo, colours, company details and disclaimer filled in. Teammates add their own name and contacts.</p>
+            <p>Opens this page with every section marked <span class="in-brand">In brand link</span> already filled in. Teammates add their own name and contacts.</p>
           </div>
           <button type="button" class="btn" id="share-brand" data-label="Copy brand link">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -99,24 +99,66 @@
       </div>
 
       <fieldset class="group">
+        <legend>Languages <span class="in-brand">In brand link</span></legend>
+        <label class="check" for="f-bilingual"><input id="f-bilingual" name="bilingual" type="checkbox"> Write the signature in two languages</label>
+        <div class="row2" data-when="bilingual=true">
+          <div class="field">
+            <label for="f-lang1">First language</label>
+            <input id="f-lang1" name="lang1" type="text" maxlength="20">
+          </div>
+          <div class="field">
+            <label for="f-lang2">Second language</label>
+            <input id="f-lang2" name="lang2" type="text" maxlength="20">
+          </div>
+        </div>
+        <p class="hint" data-when="bilingual=true">Text fields get a second box. In the signature each line is followed by its translation and the disclaimer by a second paragraph. Numbers, email and links are shared.</p>
+      </fieldset>
+
+      <fieldset class="group">
         <legend>You</legend>
         <div class="field">
           <label for="f-name">Full name</label>
-          <input id="f-name" name="name" type="text">
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="f-title">Job title</label>
-            <input id="f-title" name="title" type="text">
+          <div class="pair">
+            <div class="li"><span class="lang-tag" data-lang="1"></span><input id="f-name" name="name" type="text"></div>
+            <div class="li" data-when="bilingual=true"><span class="lang-tag" data-lang="2"></span><input id="f-name-2" name="name_2" type="text" data-label="Full name"></div>
           </div>
-          <div class="field">
-            <label for="f-company">Company</label>
-            <input id="f-company" name="company" type="text">
+        </div>
+        <div class="field">
+          <label for="f-title">Job title</label>
+          <div class="pair">
+            <div class="li"><span class="lang-tag" data-lang="1"></span><input id="f-title" name="title" type="text"></div>
+            <div class="li" data-when="bilingual=true"><span class="lang-tag" data-lang="2"></span><input id="f-title-2" name="title_2" type="text" data-label="Job title"></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Company <span class="in-brand">In brand link</span></legend>
+        <div class="field">
+          <label for="f-company">Company name</label>
+          <div class="pair">
+            <div class="li"><span class="lang-tag" data-lang="1"></span><input id="f-company" name="company" type="text"></div>
+            <div class="li" data-when="bilingual=true"><span class="lang-tag" data-lang="2"></span><input id="f-company-2" name="company_2" type="text" data-label="Company name" placeholder="Leave empty if it's the same"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-website">Website</label>
+          <input id="f-website" name="website" type="url" placeholder="example.com">
+          <span class="hint">The company name and the logo link here; no separate line in the signature.</span>
+        </div>
+        <div class="field">
+          <label for="f-address">Address</label>
+          <div class="pair">
+            <div class="li"><span class="lang-tag" data-lang="1"></span><input id="f-address" name="address" type="text"></div>
+            <div class="li" data-when="bilingual=true"><span class="lang-tag" data-lang="2"></span><input id="f-address-2" name="address_2" type="text" data-label="Address"></div>
           </div>
         </div>
         <div class="field">
           <label for="f-tagline">Tagline</label>
-          <input id="f-tagline" name="tagline" type="text" placeholder="Optional">
+          <div class="pair">
+            <div class="li"><span class="lang-tag" data-lang="1"></span><input id="f-tagline" name="tagline" type="text" placeholder="Optional"></div>
+            <div class="li" data-when="bilingual=true"><span class="lang-tag" data-lang="2"></span><input id="f-tagline-2" name="tagline_2" type="text" data-label="Tagline"></div>
+          </div>
           <label class="check" for="f-tagline-caps"><input id="f-tagline-caps" name="tagline_caps" type="checkbox"> Small capitals (otherwise italic)</label>
         </div>
       </fieldset>
@@ -132,24 +174,16 @@
             <label for="f-mobile">Mobile</label>
             <input id="f-mobile" name="mobile" type="tel">
           </div>
+          <div class="field">
+            <label for="f-email">Email</label>
+            <input id="f-email" name="email" type="email">
+          </div>
+          <div class="field">
+            <label for="f-wechat">WeChat ID</label>
+            <input id="f-wechat" name="wechat" type="text" placeholder="Optional">
+          </div>
         </div>
-        <div class="field">
-          <label for="f-email">Email</label>
-          <input id="f-email" name="email" type="email">
-        </div>
-        <div class="field">
-          <label for="f-website">Website</label>
-          <input id="f-website" name="website" type="url" placeholder="example.com">
-        </div>
-        <div class="field">
-          <label for="f-address">Address</label>
-          <input id="f-address" name="address" type="text">
-        </div>
-        <div class="field">
-          <label for="f-wechat">WeChat ID</label>
-          <input id="f-wechat" name="wechat" type="text" placeholder="Optional">
-        </div>
-        <label class="check" for="f-labels"><input id="f-labels" name="labels" type="checkbox"> Label each line with T, M, E and W</label>
+        <label class="check" for="f-labels"><input id="f-labels" name="labels" type="checkbox"> Mark phone, mobile and email with T, M and E</label>
       </fieldset>
 
       <fieldset class="group">
@@ -163,21 +197,22 @@
           <div class="field"><label for="f-facebook">Facebook</label><input id="f-facebook" name="facebook" type="url"></div>
           <div class="field"><label for="f-youtube">YouTube</label><input id="f-youtube" name="youtube" type="url"></div>
         </div>
-        <div class="row2">
-          <div class="field">
-            <label for="f-cta-label">Button link text</label>
-            <input id="f-cta-label" name="cta_label" type="text" placeholder="e.g. Book a call">
+        <div class="field">
+          <label for="f-cta-label">Button link text</label>
+          <div class="pair">
+            <div class="li"><span class="lang-tag" data-lang="1"></span><input id="f-cta-label" name="cta_label" type="text" placeholder="e.g. Book a call"></div>
+            <div class="li" data-when="bilingual=true"><span class="lang-tag" data-lang="2"></span><input id="f-cta-label-2" name="cta_label_2" type="text" data-label="Button link text"></div>
           </div>
-          <div class="field">
-            <label for="f-cta-url">Button link address</label>
-            <input id="f-cta-url" name="cta_url" type="url" placeholder="https://…">
-          </div>
+        </div>
+        <div class="field">
+          <label for="f-cta-url">Button link address</label>
+          <input id="f-cta-url" name="cta_url" type="url" placeholder="https://…">
         </div>
       </fieldset>
 
       <fieldset class="group">
-        <legend>Affiliations</legend>
-        <p class="group-hint">Groups, networks or associations you belong to. Each one gets its own line in the signature; the link is optional.</p>
+        <legend>Affiliations <span class="in-brand">In brand link</span></legend>
+        <p class="group-hint">Groups, networks or associations you belong to, under the signature. Text, link and logo are each optional; logos without text line up side by side.</p>
         <div class="aff-list" id="aff-list"></div>
         <button type="button" class="btn small add-btn" id="aff-add">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -186,7 +221,7 @@
       </fieldset>
 
       <fieldset class="group">
-        <legend>Logo or photo</legend>
+        <legend>Logo or photo <span class="in-brand">In brand link</span></legend>
         <div class="field">
           <span class="field-label" id="l-logo-type">Show</span>
           <div class="seg" role="radiogroup" aria-labelledby="l-logo-type">
@@ -238,7 +273,7 @@
       </fieldset>
 
       <fieldset class="group">
-        <legend>Style</legend>
+        <legend>Style <span class="in-brand">In brand link</span></legend>
         <div class="field">
           <span class="field-label" id="l-layout">Layout</span>
           <div class="seg" role="radiogroup" aria-labelledby="l-layout">
@@ -292,11 +327,15 @@
       </fieldset>
 
       <fieldset class="group">
-        <legend>Disclaimer</legend>
+        <legend>Disclaimer <span class="in-brand">In brand link</span></legend>
+        <p class="group-hint">Small print at the very bottom. Line breaks are kept.</p>
         <div class="field">
-          <label for="f-disclaimer" class="visually-hidden">Disclaimer text</label>
-          <textarea id="f-disclaimer" name="disclaimer" rows="5" placeholder="Optional"></textarea>
-          <span class="hint">Small print under the signature. Line breaks are kept. <button type="button" class="linkbtn inline" id="std-disclaimer">Insert a standard confidentiality notice</button></span>
+          <div class="li"><span class="lang-tag" data-lang="1"></span><textarea id="f-disclaimer" name="disclaimer" rows="5" placeholder="Optional" aria-label="Disclaimer"></textarea></div>
+          <div class="std" data-target="disclaimer"></div>
+        </div>
+        <div class="field" data-when="bilingual=true">
+          <div class="li"><span class="lang-tag" data-lang="2"></span><textarea id="f-disclaimer-2" name="disclaimer_2" rows="5" data-label="Disclaimer"></textarea></div>
+          <div class="std" data-target="disclaimer_2"></div>
         </div>
       </fieldset>
 
