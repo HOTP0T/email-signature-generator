@@ -289,13 +289,17 @@
   /* Layout: the column beside the logo holds who you are, how to reach you, your links and the tagline.
      Affiliations and the disclaimer sit in a full-width footer under a line, so the column stays short.
      Two languages either follow each other line by line, or sit side by side in two columns. */
-  function buildHtml(s) {
+  // fit (side by side only): { measure } marks the columns for measuring; { l1, split, width } pin the
+  // first-language column and line the footer up with it.
+  function buildHtml(s, fit) {
+    fit = fit || {};
     var font = FONTS[s.font] || FONTS.system;
     var ff = "font-family:" + font + ";";
     var base = s.size, lh = Math.round(base * 1.5);
     var cols = s.bilingual && s.bi_layout === "columns";
     var border = s.divider ? "1px solid " + s.divider_color : "";
     var colLine = border ? "border-left:" + border + ";" : "";
+    var GAP = '<td width="14" style="width:14px;font-size:0;line-height:0;">&nbsp;</td>';
     var table = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">';
     var line = "font-size:" + base + "px;line-height:" + lh + "px;color:" + s.muted + ";";
     var small = "font-size:" + (base - 1) + "px;line-height:" + (lh - 1) + "px;color:" + s.muted + ";";
@@ -355,15 +359,18 @@
     function pad(px) { return rows.length && px ? "padding-top:" + px + "px;" : ""; }
     if (cols) {
       // Side by side: translated lines in two columns; untranslated and shared lines run across both.
+      // Three cells: first language, a 14 px spacer, second language behind the line. The first is
+      // pinned to its measured width so the split can't move with the reader's window.
       var span = function (inner, style, px) {
-        rows.push('<tr><td colspan="2" style="' + ff + style + pad(px) + '">' + inner + "</td></tr>");
+        rows.push('<tr><td colspan="3" style="' + ff + style + pad(px) + '">' + inner + "</td></tr>");
       };
       var pair = function (a, b, style, px) {
         if (!a || !b) { if (a || b) span(a || b, style, px); return; }
         var p = pad(px);
         rows.push("<tr>" +
-          '<td valign="top" style="' + ff + style + p + 'padding-right:14px;vertical-align:top;">' + a + "</td>" +
-          '<td valign="top" style="' + ff + style + p + "padding-left:14px;" + colLine + 'vertical-align:top;">' + b + "</td></tr>");
+          '<td valign="top"' + (fit.l1 ? ' width="' + fit.l1 + '"' : "") + (fit.measure ? " data-col1" : "") +
+          ' style="' + ff + style + p + (fit.l1 ? "width:" + fit.l1 + "px;" : "") + 'vertical-align:top;">' + a + "</td>" + GAP +
+          '<td valign="top"' + (fit.measure ? " data-col2" : "") + ' style="' + ff + style + p + "padding-left:14px;" + colLine + 'vertical-align:top;">' + b + "</td></tr>");
       };
       pair(name ? esc(name) : "", name2 ? esc(name2) : "", nameStyle, 0);
       pair(roleA.join(sep), roleB.join(sep), line, 0);
@@ -409,6 +416,7 @@
     } else {
       main = logo || info;
     }
+    if (fit.measure) return '<div data-main style="display:inline-block;">' + main + "</div>";
 
     // Footer: affiliations, then the disclaimer in each language.
     var items = s.affiliations.map(function (a) {
@@ -442,13 +450,16 @@
 
     var foot = [];
     function footRow(inner, px, style) {
-      foot.push("<tr><td" + (cols ? ' colspan="2"' : "") + ' style="' + (style ? ff + style : "") +
+      foot.push("<tr><td" + (cols ? ' colspan="3"' : "") + ' style="' + (style ? ff + style : "") +
         "padding:" + (foot.length ? px : 0) + 'px 0 0;">' + inner + "</td></tr>");
     }
+    // The footer's first column ends where the main block's does, so the two lines meet the same split.
+    var leftW = fit.split ? Math.max(60, Math.round(fit.split) - 14) : 0;
     function footPair(a, b, px, style, v) {
       var p = foot.length ? px : 0;
       foot.push("<tr>" +
-        '<td valign="' + v + '" style="' + ff + style + "padding:" + p + "px 14px 0 0;vertical-align:" + v + ';">' + a + "</td>" +
+        '<td valign="' + v + '"' + (leftW ? ' width="' + leftW + '"' : "") + ' style="' + ff + style + (leftW ? "width:" + leftW + "px;" : "") +
+        "padding-top:" + p + "px;vertical-align:" + v + ';">' + a + "</td>" + GAP +
         '<td valign="' + v + '" style="' + ff + style + "padding:" + p + "px 0 0 14px;" + colLine + "vertical-align:" + v + ';">' + b + "</td></tr>");
     }
     blocks.forEach(function (b) {
@@ -467,7 +478,7 @@
     else [d1, d2].filter(Boolean).forEach(function (t, i) { footRow(note(t), i === 0 ? 12 : 8, noteStyle); });
     if (!foot.length) return main;
 
-    var footer = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:' + (cols ? 640 : 560) + 'px;">' +
+    var footer = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:' + (cols ? (fit.width ? Math.max(560, Math.round(fit.width)) : 640) : 560) + 'px;">' +
       '<tr><td style="' + (border ? "padding:12px 0 0;border-top:" + border + ";" : "padding:0;") + '">' +
       table + foot.join("") + "</table></td></tr></table>";
     if (!main) return footer;
@@ -724,9 +735,36 @@
     return w;
   }
 
+  // Side by side: lay the main block out off-screen at a comfortable width and read where the
+  // second language starts, so the footer's columns can follow it.
+  var measureBox = document.createElement("div");
+  measureBox.setAttribute("aria-hidden", "true");
+  measureBox.style.cssText = "position:absolute;left:-10000px;top:0;width:900px;visibility:hidden;pointer-events:none;";
+  document.body.appendChild(measureBox);
+  function measureColumns(s) {
+    measureBox.innerHTML = buildHtml(s, { measure: true });
+    var root = measureBox.querySelector("[data-main]");
+    var col1 = measureBox.querySelector("[data-col1]"), col2 = measureBox.querySelector("[data-col2]");
+    var fit = {};
+    if (root && col1 && col2) {
+      var left = root.getBoundingClientRect().left, x2 = col2.getBoundingClientRect().left;
+      fit = {
+        l1: Math.round(x2 - 14 - col1.getBoundingClientRect().left), // first-language column, spacer excluded
+        split: Math.round(x2 - left),                                  // where the line sits, from the signature's left edge
+        width: root.getBoundingClientRect().width
+      };
+    }
+    measureBox.innerHTML = "";
+    return fit;
+  }
+
   function render() {
-    html = buildHtml(state);
+    var cols = state.bilingual && state.bi_layout === "columns";
+    html = buildHtml(state, cols ? measureColumns(state) : null);
+    // Laid out at its natural width like in a desktop mail window, then shrunk to fit the preview if wider.
+    sigEl.classList.toggle("natural", cols);
     sigEl.innerHTML = html || '<p class="sig-empty">Your signature appears here once you fill in the form.</p>';
+    fitPreview();
     codeEl.textContent = pretty(html);
 
     var n = html.length;
@@ -738,6 +776,19 @@
       return '<li class="' + w[0] + '">' + ICON[w[0]] + "<span>" + esc(w[1]) + "</span></li>";
     }).join("");
   }
+
+  var pvSub = document.getElementById("pv-sub");
+  function fitPreview() {
+    sigEl.style.zoom = "";
+    var avail = sigEl.parentNode.clientWidth, natural = sigEl.offsetWidth, label = "As a recipient sees it";
+    if (sigEl.classList.contains("natural") && avail > 0 && natural > avail) {
+      var z = Math.floor(avail / natural * 1000) / 1000;
+      sigEl.style.zoom = String(z);
+      label = "Shown at " + Math.round(z * 100) + "% to fit";
+    }
+    pvSub.textContent = label;
+  }
+  window.addEventListener("resize", fitPreview);
 
   var savedTimer;
   function changed() {

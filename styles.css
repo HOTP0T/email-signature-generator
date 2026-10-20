@@ -390,6 +390,7 @@ input[type="file"]:focus-visible + .btn, .upload-row label.btn:focus-within { ou
 .mail-body { display: grid; gap: 12px; padding: 20px 24px 28px; }
 .mail-body p { margin: 0; }
 .sig-scroll { overflow-x: auto; padding-top: 6px; }
+#sig.natural { width: max-content; }
 .sig-empty { color: var(--paper-muted); font-style: italic; }
 @media (max-width: 480px) {
   .mail-head { padding: 10px 16px; }
