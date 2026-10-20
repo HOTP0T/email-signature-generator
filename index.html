@@ -111,7 +111,17 @@
             <input id="f-lang2" name="lang2" type="text" maxlength="20">
           </div>
         </div>
-        <p class="hint" data-when="bilingual=true">Text fields get a second box. In the signature each line is followed by its translation and the disclaimer by a second paragraph. Numbers, email and links are shared.</p>
+        <div class="field" data-when="bilingual=true">
+          <span class="field-label" id="l-bi-layout">Layout</span>
+          <div class="seg" role="radiogroup" aria-labelledby="l-bi-layout">
+            <label><input type="radio" id="f-bi-lines" name="bi_layout" value="lines"><span>Line by line</span></label>
+            <label><input type="radio" id="f-bi-columns" name="bi_layout" value="columns"><span>Side by side</span></label>
+          </div>
+        </div>
+        <div class="bi-hints" data-when="bilingual=true">
+          <p class="hint" data-when="bi_layout=lines">Each line is followed by its translation, and the disclaimer by a second paragraph. Numbers, email and links are shared.</p>
+          <p class="hint" data-when="bi_layout=columns">Translated lines sit in two columns; lines you leave untranslated, numbers, email and links run across both. Two columns need room, so phones may show the signature smaller.</p>
+        </div>
       </fieldset>
 
       <fieldset class="group">

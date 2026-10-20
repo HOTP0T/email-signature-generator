@@ -48,6 +48,7 @@
 
   var EXAMPLE = {
     bilingual: false,
+    bi_layout: "lines",
     lang1: "English",
     lang2: "Français",
     name: "Alex Morgan",
@@ -109,6 +110,7 @@
     logo_type: ["none", "initials", "image"],
     logo_shape: ["square", "rounded", "circle"],
     layout: ["side", "stacked"],
+    bi_layout: ["lines", "columns"],
     font: Object.keys(FONTS)
   };
   var RANGES = { logo_size: [32, 128], size: [12, 15], logo_nw: [0, 100000], logo_nh: [0, 100000] };
@@ -116,7 +118,7 @@
   var NUMBERS = ["logo_size", "size"];
   var LANG_KEYS = ["bilingual", "lang1", "lang2"];
   // What a brand link carries. Personal details never go into a link.
-  var BRAND = ["bilingual", "lang1", "lang2", "company", "company_2", "website", "address", "address_2",
+  var BRAND = ["bilingual", "bi_layout", "lang1", "lang2", "company", "company_2", "website", "address", "address_2",
     "tagline", "tagline_2", "tagline_caps", "labels", "affiliations", "disclaimer", "disclaimer_2",
     "logo_type", "logo_initials", "logo_url", "logo_size", "logo_shape", "logo_link",
     "layout", "accent", "text", "muted", "divider", "divider_color", "font", "size"];
@@ -285,14 +287,22 @@
   }
 
   /* Layout: the column beside the logo holds who you are, how to reach you, your links and the tagline.
-     Affiliations and the disclaimer sit in a full-width footer under a line, so the column stays short. */
+     Affiliations and the disclaimer sit in a full-width footer under a line, so the column stays short.
+     Two languages either follow each other line by line, or sit side by side in two columns. */
   function buildHtml(s) {
     var font = FONTS[s.font] || FONTS.system;
     var ff = "font-family:" + font + ";";
     var base = s.size, lh = Math.round(base * 1.5);
+    var cols = s.bilingual && s.bi_layout === "columns";
+    var border = s.divider ? "1px solid " + s.divider_color : "";
+    var colLine = border ? "border-left:" + border + ";" : "";
     var table = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">';
     var line = "font-size:" + base + "px;line-height:" + lh + "px;color:" + s.muted + ";";
     var small = "font-size:" + (base - 1) + "px;line-height:" + (lh - 1) + "px;color:" + s.muted + ";";
+    var nameStyle = "font-size:" + (base + 3) + "px;line-height:" + (lh + 4) + "px;font-weight:700;color:" + s.text + ";";
+    var tagStyle = "font-size:" + (base - 2) + "px;line-height:" + (lh - 2) + "px;color:" + s.muted + ";" +
+      (s.tagline_caps ? "letter-spacing:0.08em;" : "font-style:italic;");
+    var noteStyle = "font-size:" + Math.max(10, base - 2) + "px;line-height:" + Math.max(14, lh - 3) + "px;color:" + s.muted + ";";
     var sep = '<span style="color:' + s.muted + ';">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>';
     // Outlook doesn't pass the font down from a table, so every text cell names it.
     function cell(inner, style) { return '<td style="' + ff + style + '">' + inner + "</td>"; }
@@ -306,42 +316,32 @@
         : inner;
     }
     function two(k) { return s.bilingual ? s[k + "_2"].trim() : ""; }
-    var rows = [];
-    function gap(px) { return rows.length ? "padding-top:" + px + "px;" : ""; }
+    function tagText(t) { return esc(s.tagline_caps ? t.toLocaleUpperCase() : t); }
     var site = webUrl(s.website);
-
-    // Who: name, then title and company in each language. The company name carries the website link.
-    var name = s.name.trim(), name2 = two("name");
-    if (name || name2) {
-      rows.push(row(esc(name) + (name2 ? (name ? "&nbsp;&nbsp;" : "") + '<span style="font-weight:400;">' + esc(name2) + "</span>" : ""),
-        "font-size:" + (base + 3) + "px;line-height:" + (lh + 4) + "px;font-weight:700;color:" + s.text + ";"));
-    }
+    // The company name carries the website link.
     function org(c) {
       return site ? link(site, esc(c), s.accent, "font-weight:600;") : '<span style="color:' + s.text + ';font-weight:600;">' + esc(c) + "</span>";
     }
+
+    // The pieces, in each language where they have one.
+    var name = s.name.trim(), name2 = two("name");
     var company = s.company.trim() || (site ? shortUrl(site) : "");
+    var title2 = two("title"), company2 = two("company");
     var roleA = [], roleB = [];
     if (s.title.trim()) roleA.push(esc(s.title.trim()));
     if (company) roleA.push(org(company));
-    if (two("title")) roleB.push(esc(two("title")));
-    if (two("company")) roleB.push(org(two("company")));
-    if (roleA.length) rows.push(row(roleA.join(sep), line));
-    if (roleB.length) rows.push(row(roleB.join(sep), line));
+    if (title2) roleB.push(esc(title2));
+    if (company2) roleB.push(org(company2));
+    else if (cols && title2 && company) roleB.push(org(company)); // each column reads on its own
 
-    // Reach: numbers, then email and WeChat, then the address in each language.
-    var phones = [], reach = [], contact = [];
+    var phones = [], reach = [];
     var phone = s.phone.trim(), mobile = s.mobile.trim(), email = s.email.trim(), wechat = s.wechat.trim();
     if (phone) phones.push(tag("T", telHref(phone) ? link(telHref(phone), esc(phone), s.muted) : esc(phone)));
     if (mobile) phones.push(tag("M", telHref(mobile) ? link(telHref(mobile), esc(mobile), s.muted) : esc(mobile)));
     if (email) reach.push(tag("E", emailOk(email) ? link("mailto:" + email, esc(email), s.muted) : esc(email)));
     if (wechat) reach.push(tag("WeChat", esc(wechat), true));
-    if (phones.length) contact.push(phones.join(sep));
-    if (reach.length) contact.push(reach.join(sep));
-    if (s.address.trim()) contact.push(esc(s.address.trim()));
-    if (two("address")) contact.push(esc(two("address")));
-    contact.forEach(function (c, i) { rows.push(row(c, line + (i === 0 ? gap(8) : ""))); });
+    var address = s.address.trim(), address2 = two("address");
 
-    // Links: social profiles and the button link on one line.
     var links = SOCIALS.map(function (p) {
       var u = webUrl(s[p[0]]);
       return u ? link(u, p[1], s.accent, "font-weight:600;") : "";
@@ -349,17 +349,51 @@
     var ctaText = [s.cta_label.trim(), two("cta_label")].filter(Boolean).join(" / ");
     var ctaUrl = webUrl(s.cta_url);
     if (ctaText && ctaUrl) links.push(link(ctaUrl, esc(ctaText) + "&nbsp;&rarr;", s.accent, "font-weight:700;"));
-    if (links.length) rows.push(row(links.join(sep), line + gap(8)));
+    var tag1 = s.tagline.trim(), tag2 = two("tagline");
 
-    var tagStyle = "font-size:" + (base - 2) + "px;line-height:" + (lh - 2) + "px;color:" + s.muted + ";" +
-      (s.tagline_caps ? "letter-spacing:0.08em;" : "font-style:italic;");
-    [s.tagline.trim(), two("tagline")].filter(Boolean).forEach(function (t, i) {
-      rows.push(row(esc(s.tagline_caps ? t.toLocaleUpperCase() : t), tagStyle + (i === 0 ? gap(10) : "")));
-    });
+    var rows = [];
+    function pad(px) { return rows.length && px ? "padding-top:" + px + "px;" : ""; }
+    if (cols) {
+      // Side by side: translated lines in two columns; untranslated and shared lines run across both.
+      var span = function (inner, style, px) {
+        rows.push('<tr><td colspan="2" style="' + ff + style + pad(px) + '">' + inner + "</td></tr>");
+      };
+      var pair = function (a, b, style, px) {
+        if (!a || !b) { if (a || b) span(a || b, style, px); return; }
+        var p = pad(px);
+        rows.push("<tr>" +
+          '<td valign="top" style="' + ff + style + p + 'padding-right:14px;vertical-align:top;">' + a + "</td>" +
+          '<td valign="top" style="' + ff + style + p + "padding-left:14px;" + colLine + 'vertical-align:top;">' + b + "</td></tr>");
+      };
+      pair(name ? esc(name) : "", name2 ? esc(name2) : "", nameStyle, 0);
+      pair(roleA.join(sep), roleB.join(sep), line, 0);
+      pair(address ? esc(address) : "", address2 ? esc(address2) : "", line, 6);
+      pair(tag1 ? tagText(tag1) : "", tag2 ? tagText(tag2) : "", tagStyle, 8);
+      [phones, reach].filter(function (g) { return g.length; }).forEach(function (g, i) {
+        span(g.join(sep), line, i === 0 ? 10 : 0);
+      });
+      if (links.length) span(links.join(sep), line, 8);
+    } else {
+      // Line by line: each line followed by its translation.
+      if (name || name2) {
+        rows.push(row(esc(name) + (name2 ? (name ? "&nbsp;&nbsp;" : "") + '<span style="font-weight:400;">' + esc(name2) + "</span>" : ""), nameStyle));
+      }
+      if (roleA.length) rows.push(row(roleA.join(sep), line));
+      if (roleB.length) rows.push(row(roleB.join(sep), line));
+      var contact = [];
+      if (phones.length) contact.push(phones.join(sep));
+      if (reach.length) contact.push(reach.join(sep));
+      if (address) contact.push(esc(address));
+      if (address2) contact.push(esc(address2));
+      contact.forEach(function (c, i) { rows.push(row(c, line + (i === 0 ? pad(8) : ""))); });
+      if (links.length) rows.push(row(links.join(sep), line + pad(8)));
+      [tag1, tag2].filter(Boolean).forEach(function (t, i) {
+        rows.push(row(tagText(t), tagStyle + (i === 0 ? pad(10) : "")));
+      });
+    }
 
     var info = rows.length ? table + rows.join("") + "</table>" : "";
     var logo = logoHtml(s, font);
-    var border = s.divider ? "1px solid " + s.divider_color : "";
     var main;
     if (logo && info) {
       if (s.layout === "stacked") {
@@ -394,35 +428,46 @@
         "height:" + sz.h + 'px;border:0;outline:none;">';
       return it.url ? '<a href="' + esc(it.url) + '" style="text-decoration:none;">' + img + "</a>" : img;
     }
+    function affText(it, t) { return it.url ? link(it.url, esc(t), s.muted, "text-decoration:underline;") : esc(t); }
     function affWords(it) {
-      return [it.t1, it.t2].filter(Boolean).map(function (t) {
-        return it.url ? link(it.url, esc(t), s.muted, "text-decoration:underline;") : esc(t);
-      }).join("<br>");
+      return [it.t1, it.t2].filter(Boolean).map(function (t) { return affText(it, t); }).join("<br>");
     }
+    function withLogo(it, words) {
+      if (!it.logo) return table + row(words, small) + "</table>";
+      return table + "<tr>" +
+        '<td valign="middle" style="padding:0 10px 0 0;vertical-align:middle;">' + affLogo(it) + "</td>" +
+        cell(words, small + "vertical-align:middle;") + "</tr></table>";
+    }
+    function note(t) { return esc(t).replace(/\r?\n/g, "<br>"); }
+
     var foot = [];
+    function footRow(inner, px, style) {
+      foot.push("<tr><td" + (cols ? ' colspan="2"' : "") + ' style="' + (style ? ff + style : "") +
+        "padding:" + (foot.length ? px : 0) + 'px 0 0;">' + inner + "</td></tr>");
+    }
+    function footPair(a, b, px, style, v) {
+      var p = foot.length ? px : 0;
+      foot.push("<tr>" +
+        '<td valign="' + v + '" style="' + ff + style + "padding:" + p + "px 14px 0 0;vertical-align:" + v + ';">' + a + "</td>" +
+        '<td valign="' + v + '" style="' + ff + style + "padding:" + p + "px 0 0 14px;" + colLine + "vertical-align:" + v + ';">' + b + "</td></tr>");
+    }
     blocks.forEach(function (b) {
-      var html;
       if (b.logos) {
-        html = table + "<tr>" + b.logos.map(function (it, i) {
+        footRow(table + "<tr>" + b.logos.map(function (it, i) {
           return '<td valign="middle" style="padding:0 ' + (i < b.logos.length - 1 ? 16 : 0) + 'px 0 0;vertical-align:middle;">' + affLogo(it) + "</td>";
-        }).join("") + "</tr></table>";
-      } else if (b.item.logo) {
-        html = table + "<tr>" +
-          '<td valign="middle" style="padding:0 10px 0 0;vertical-align:middle;">' + affLogo(b.item) + "</td>" +
-          cell(affWords(b.item), small + "vertical-align:middle;") + "</tr></table>";
+        }).join("") + "</tr></table>", 8);
+      } else if (cols && b.item.t1 && b.item.t2) {
+        footPair(withLogo(b.item, affText(b.item, b.item.t1)), affText(b.item, b.item.t2), 8, small, "middle");
       } else {
-        html = table + row(affWords(b.item), small) + "</table>";
+        footRow(withLogo(b.item, affWords(b.item)), 8);
       }
-      foot.push('<tr><td style="padding:' + (foot.length ? 8 : 0) + 'px 0 0;">' + html + "</td></tr>");
     });
-    var noteStyle = "font-size:" + Math.max(10, base - 2) + "px;line-height:" + Math.max(14, lh - 3) + "px;color:" + s.muted + ";";
-    [s.disclaimer.trim(), two("disclaimer")].filter(Boolean).forEach(function (n, i) {
-      var pad = foot.length ? (i === 0 ? 12 : 8) : 0;
-      foot.push("<tr>" + cell(esc(n).replace(/\r?\n/g, "<br>"), noteStyle + "padding:" + pad + "px 0 0;") + "</tr>");
-    });
+    var d1 = s.disclaimer.trim(), d2 = two("disclaimer");
+    if (cols && d1 && d2) footPair(note(d1), note(d2), 12, noteStyle, "top");
+    else [d1, d2].filter(Boolean).forEach(function (t, i) { footRow(note(t), i === 0 ? 12 : 8, noteStyle); });
     if (!foot.length) return main;
 
-    var footer = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:560px;">' +
+    var footer = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:' + (cols ? 640 : 560) + 'px;">' +
       '<tr><td style="' + (border ? "padding:12px 0 0;border-top:" + border + ";" : "padding:0;") + '">' +
       table + foot.join("") + "</table></td></tr></table>";
     if (!main) return footer;
