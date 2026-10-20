@@ -58,6 +58,7 @@
     company: "Northwind Studio",
     company_2: "",
     website: "https://northwind.example",
+    show_site: true,
     address: "18 Harbor Street, San Francisco, CA 94111",
     address_2: "",
     tagline: "Design and print for independent brands",
@@ -67,7 +68,7 @@
     mobile: "",
     email: "alex@northwind.example",
     wechat: "",
-    labels: true,
+    icons: true,
     linkedin: "https://www.linkedin.com/in/alex-morgan-example",
     x: "",
     github: "",
@@ -86,7 +87,7 @@
     logo_type: "initials",
     logo_initials: "",
     logo_url: "",
-    logo_size: 64,
+    logo_size: 48,
     logo_shape: "rounded",
     logo_link: "",
     layout: "side",
@@ -119,7 +120,7 @@
   var LANG_KEYS = ["bilingual", "lang1", "lang2"];
   // What a brand link carries. Personal details never go into a link.
   var BRAND = ["bilingual", "bi_layout", "lang1", "lang2", "company", "company_2", "website", "address", "address_2",
-    "tagline", "tagline_2", "tagline_caps", "labels", "affiliations", "disclaimer", "disclaimer_2",
+    "tagline", "tagline_2", "tagline_caps", "show_site", "icons", "affiliations", "disclaimer", "disclaimer_2",
     "logo_type", "logo_initials", "logo_url", "logo_size", "logo_shape", "logo_link",
     "layout", "accent", "text", "muted", "divider", "divider_color", "font", "size"];
   var PERSONAL = ["name", "name_2", "title", "title_2", "phone", "mobile", "email", "wechat",
@@ -151,6 +152,34 @@
     v = Math.round(Number(v));
     if (!isFinite(v)) v = 0;
     return Math.min(max, Math.max(min, v));
+  }
+
+  // Contact icons are hosted PNGs (mail apps drop SVG and embedded images), one per tone below;
+  // the signature uses the tone closest to the Details colour. tools/make-icons.py renders this list.
+  var ICON_TONES = [
+    "111111", "333333", "4d4d4d", "666666", "808080", "999999", "b3b3b3",
+    "0f172a", "1e293b", "334155", "475569", "56637a", "64748b", "8792a6", "94a3b8", "aab5c7",
+    "292524", "44403c", "57534e", "78716c", "a8a29e",
+    "12489a", "1d4ed8", "2563eb", "0e7c66", "0f766e", "047857", "15803d", "b91c1c", "c2410c", "a16207", "7c3aed", "be185d"
+  ];
+  var ICON_BASE = (/^https?:$/.test(location.protocol) ? PAGE_DIR : "https://hotp0t.github.io/email-signature-generator/") + "icons/";
+  function rgb(hex) {
+    var n = parseInt(hex.replace("#", ""), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function nearestTone(hex) {
+    var a = rgb(hex), best = ICON_TONES[0], bestD = Infinity;
+    ICON_TONES.forEach(function (t) {
+      var b = rgb(t), rm = (a[0] + b[0]) / 2, dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+      var d = (2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db;
+      if (d < bestD) { bestD = d; best = t; }
+    });
+    return best;
+  }
+  // A colour moved part of the way toward another (k = 0..1), for fainter separators and small print.
+  function blend(hex, toward, k) {
+    var a = rgb(hex), b = rgb(toward);
+    return "#" + a.map(function (v, i) { return ("0" + Math.round(v + (b[i] - v) * k).toString(16)).slice(-2); }).join("");
   }
 
   function luminance(hex) {
@@ -295,7 +324,7 @@
     fit = fit || {};
     var font = FONTS[s.font] || FONTS.system;
     var ff = "font-family:" + font + ";";
-    var base = s.size, lh = Math.round(base * 1.5);
+    var base = s.size, lh = base + 6;
     var cols = s.bilingual && s.bi_layout === "columns";
     var border = s.divider ? "1px solid " + s.divider_color : "";
     var colLine = border ? "border-left:" + border + ";" : "";
@@ -303,29 +332,28 @@
     var table = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">';
     var line = "font-size:" + base + "px;line-height:" + lh + "px;color:" + s.muted + ";";
     var small = "font-size:" + (base - 1) + "px;line-height:" + (lh - 1) + "px;color:" + s.muted + ";";
-    var nameStyle = "font-size:" + (base + 3) + "px;line-height:" + (lh + 4) + "px;font-weight:700;color:" + s.text + ";";
-    var tagStyle = "font-size:" + (base - 2) + "px;line-height:" + (lh - 2) + "px;color:" + s.muted + ";" +
+    var nameStyle = "font-size:" + (base + 3) + "px;line-height:" + (base + 9) + "px;font-weight:600;color:" + s.text + ";";
+    var tagStyle = "font-size:" + (base - 2) + "px;line-height:" + (base + 3) + "px;color:" + s.muted + ";" +
       (s.tagline_caps ? "letter-spacing:0.08em;" : "font-style:italic;");
-    var noteStyle = "font-size:" + Math.max(10, base - 2) + "px;line-height:" + Math.max(14, lh - 3) + "px;color:" + s.muted + ";";
-    var sep = '<span style="color:' + s.muted + ';">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>';
+    var noteStyle = "font-size:" + Math.max(10, base - 2) + "px;line-height:" + Math.max(14, base + 3) + "px;color:" + blend(s.muted, "#ffffff", 0.15) + ";";
+    var sep = '<span style="color:' + blend(s.muted, "#ffffff", 0.45) + ';">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>';
     // Outlook doesn't pass the font down from a table, so every text cell names it.
     function cell(inner, style) { return '<td style="' + ff + style + '">' + inner + "</td>"; }
     function row(inner, style) { return "<tr>" + cell(inner, style) + "</tr>"; }
     function link(href, label, color, extra) {
       return '<a href="' + esc(href) + '" style="color:' + color + ";text-decoration:none;" + (extra || "") + '">' + label + "</a>";
     }
-    function tag(letter, inner, always) {
-      return (s.labels || always)
-        ? '<span style="color:' + s.accent + ';font-weight:700;">' + letter + "</span>&nbsp;&nbsp;" + inner
-        : inner;
+    // A small hosted icon before a phone number, WeChat ID or address; its alt / title is the hover word.
+    var tone = nearestTone(s.muted), isz = base + 1;
+    function icon(name, word) {
+      return '<img src="' + ICON_BASE + name + "-" + tone + '.png" width="' + isz + '" height="' + isz + '" alt="' + word + '" title="' + word + '"' +
+        ' style="display:inline-block;width:' + isz + "px;height:" + isz + 'px;border:0;vertical-align:-2px;margin-right:4px;">&nbsp;';
     }
     function two(k) { return s.bilingual ? s[k + "_2"].trim() : ""; }
     function tagText(t) { return esc(s.tagline_caps ? t.toLocaleUpperCase() : t); }
     var site = webUrl(s.website);
     // The company name carries the website link.
-    function org(c) {
-      return site ? link(site, esc(c), s.accent, "font-weight:600;") : '<span style="color:' + s.text + ';font-weight:600;">' + esc(c) + "</span>";
-    }
+    function org(c) { return site ? link(site, esc(c), s.muted) : esc(c); }
 
     // The pieces, in each language where they have one.
     var name = s.name.trim(), name2 = two("name");
@@ -340,16 +368,27 @@
 
     var phones = [], reach = [];
     var phone = s.phone.trim(), mobile = s.mobile.trim(), email = s.email.trim(), wechat = s.wechat.trim();
-    if (phone) phones.push(tag("T", telHref(phone) ? link(telHref(phone), esc(phone), s.muted) : esc(phone)));
-    if (mobile) phones.push(tag("M", telHref(mobile) ? link(telHref(mobile), esc(mobile), s.muted) : esc(mobile)));
-    if (email) reach.push(tag("E", emailOk(email) ? link("mailto:" + email, esc(email), s.muted) : esc(email)));
-    if (wechat) reach.push(tag("WeChat", esc(wechat), true));
+    function tel(n) { return telHref(n) ? link(telHref(n), esc(n), s.muted) : esc(n); }
+    if (phone) phones.push((s.icons ? icon("phone", "Phone") : "") + tel(phone));
+    if (mobile) phones.push((s.icons ? icon("smartphone", "Mobile") : (phone ? "Mobile&nbsp;" : "")) + tel(mobile));
+    if (email) reach.push(emailOk(email) ? link("mailto:" + email, esc(email), s.muted) : esc(email));
+    if (wechat) reach.push((s.icons ? icon("wechat", "WeChat") : '<span style="font-weight:600;">WeChat</span>&nbsp;&nbsp;') + esc(wechat));
     var address = s.address.trim(), address2 = two("address");
+    // The address icon sits in its own cell, so a second-language line lines up under the first.
+    function addressBlock(lines) {
+      var text = lines.map(esc).join("<br>");
+      if (!s.icons) return text;
+      return table + "<tr>" +
+        '<td valign="top" style="padding:' + Math.round((lh - isz) / 2) + 'px 0 0;vertical-align:top;width:' + (isz + 6) + 'px;">' +
+        '<img src="' + ICON_BASE + "map-pin-" + tone + '.png" width="' + isz + '" height="' + isz + '" alt="Address" title="Address" style="display:block;width:' + isz + "px;height:" + isz + 'px;border:0;"></td>' +
+        cell(text, line) + "</tr></table>";
+    }
 
     var links = SOCIALS.map(function (p) {
       var u = webUrl(s[p[0]]);
-      return u ? link(u, p[1], s.accent, "font-weight:600;") : "";
+      return u ? link(u, p[1], s.accent) : "";
     }).filter(Boolean);
+    if (s.show_site && site) links.unshift(link(site, esc(shortUrl(site)), s.accent, "font-weight:600;"));
     var ctaText = [s.cta_label.trim(), two("cta_label")].filter(Boolean).join(" / ");
     var ctaUrl = webUrl(s.cta_url);
     if (ctaText && ctaUrl) links.push(link(ctaUrl, esc(ctaText) + "&nbsp;&rarr;", s.accent, "font-weight:700;"));
@@ -374,12 +413,11 @@
       };
       pair(name ? esc(name) : "", name2 ? esc(name2) : "", nameStyle, 0);
       pair(roleA.join(sep), roleB.join(sep), line, 0);
-      pair(address ? esc(address) : "", address2 ? esc(address2) : "", line, 6);
+      pair(address ? addressBlock([address]) : "", address2 ? esc(address2) : "", line, 6);
       pair(tag1 ? tagText(tag1) : "", tag2 ? tagText(tag2) : "", tagStyle, 8);
-      [phones, reach].filter(function (g) { return g.length; }).forEach(function (g, i) {
-        span(g.join(sep), line, i === 0 ? 10 : 0);
-      });
-      if (links.length) span(links.join(sep), line, 8);
+      var shared = [phones, reach].filter(function (g) { return g.length; });
+      shared.forEach(function (g, i) { span(g.join(sep), line, i === 0 ? 10 : 0); });
+      if (links.length) span(links.join(sep), line, shared.length ? 8 : 10);
     } else {
       // Line by line: each line followed by its translation.
       if (name || name2) {
@@ -390,12 +428,11 @@
       var contact = [];
       if (phones.length) contact.push(phones.join(sep));
       if (reach.length) contact.push(reach.join(sep));
-      if (address) contact.push(esc(address));
-      if (address2) contact.push(esc(address2));
-      contact.forEach(function (c, i) { rows.push(row(c, line + (i === 0 ? pad(8) : ""))); });
-      if (links.length) rows.push(row(links.join(sep), line + pad(8)));
+      if (address || address2) contact.push(addressBlock([address, address2].filter(Boolean)));
+      contact.forEach(function (c, i) { rows.push(row(c, line + (i === 0 ? pad(10) : ""))); });
+      if (links.length) rows.push(row(links.join(sep), line + pad(contact.length ? 8 : 10)));
       [tag1, tag2].filter(Boolean).forEach(function (t, i) {
-        rows.push(row(tagText(t), tagStyle + (i === 0 ? pad(10) : "")));
+        rows.push(row(tagText(t), tagStyle + (i === 0 ? pad(8) : "")));
       });
     }
 
@@ -409,7 +446,7 @@
           '<tr><td style="' + (border ? "padding:12px 0 0;border-top:" + border + ";" : "padding:0;") + '">' + info + "</td></tr></table>";
       } else {
         main = table + "<tr>" +
-          '<td valign="top" style="padding:0 ' + (border ? 16 : 18) + 'px 0 0;vertical-align:top;">' + logo + "</td>" +
+          '<td valign="top" style="padding:2px ' + (border ? 16 : 18) + 'px 0 0;vertical-align:top;">' + logo + "</td>" +
           '<td valign="top" style="' + (border ? "padding:0 0 0 16px;border-left:" + border + ";" : "padding:0;") + 'vertical-align:top;">' + info + "</td>" +
           "</tr></table>";
       }
@@ -478,28 +515,27 @@
     else [d1, d2].filter(Boolean).forEach(function (t, i) { footRow(note(t), i === 0 ? 12 : 8, noteStyle); });
     if (!foot.length) return main;
 
-    var footer = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:' + (cols ? (fit.width ? Math.max(560, Math.round(fit.width)) : 640) : 560) + 'px;">' +
+    var footer = '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:' + (cols ? (fit.width ? Math.max(560, Math.round(fit.width)) : 640) : 520) + 'px;">' +
       '<tr><td style="' + (border ? "padding:12px 0 0;border-top:" + border + ";" : "padding:0;") + '">' +
       table + foot.join("") + "</table></td></tr></table>";
     if (!main) return footer;
     return table + '<tr><td style="padding:0;">' + main + "</td></tr>" +
-      '<tr><td style="padding:' + (border ? 16 : 18) + 'px 0 0;">' + footer + "</td></tr></table>";
+      '<tr><td style="padding:18px 0 0;">' + footer + "</td></tr></table>";
   }
 
   function buildText(s) {
     var out = [];
     function two(k) { return s.bilingual ? s[k + "_2"].trim() : ""; }
-    function lab(letter, v, always) { return (s.labels || always) ? letter + " " + v : v; }
     function add(v) { if (v) out.push(v); }
     var site = webUrl(s.website);
     add([s.name.trim(), two("name")].filter(Boolean).join("  "));
     add([s.title.trim(), s.company.trim()].filter(Boolean).join(" · "));
     add([two("title"), two("company")].filter(Boolean).join(" · "));
     var phones = [], reach = [];
-    if (s.phone.trim()) phones.push(lab("T", s.phone.trim()));
-    if (s.mobile.trim()) phones.push(lab("M", s.mobile.trim()));
-    if (s.email.trim()) reach.push(lab("E", s.email.trim()));
-    if (s.wechat.trim()) reach.push(lab("WeChat", s.wechat.trim(), true));
+    if (s.phone.trim()) phones.push("Phone " + s.phone.trim());
+    if (s.mobile.trim()) phones.push("Mobile " + s.mobile.trim());
+    if (s.email.trim()) reach.push(s.email.trim());
+    if (s.wechat.trim()) reach.push("WeChat " + s.wechat.trim());
     add(phones.join(" · "));
     add(reach.join(" · "));
     add(s.address.trim());

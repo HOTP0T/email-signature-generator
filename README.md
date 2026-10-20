@@ -9,7 +9,8 @@ It is three static files (`index.html`, `styles.css`, `app.js`). There is no bui
 ## What it does
 
 - **Your brand:** logo or photo (image link or upload), or initials drawn in your accent colour; accent, name, details and line colours; font; text size; logo beside or above the details.
-- **Your details:** name, job title, company (linked to the website, so there is no separate website line), address, tagline, phone, mobile, email, WeChat ID, six social links and a button link ("Book a call →").
+- **Your details:** name, job title, company (linked to the website), address, tagline, phone, mobile, email, WeChat ID, six social links and a button link ("Book a call →"). The website can also open the links line (`example.com · LinkedIn`).
+- **Icons:** small icons before phone, mobile, WeChat and address, with a hover word, in the tone closest to the Details colour. They are PNGs in `icons/`, rendered by `tools/make-icons.py` from Lucide (ISC) and Simple Icons (CC0) shapes, and signatures load them from wherever this page is hosted.
 - **Two languages:** one switch gives every text field a second box, in one of two layouts. *Line by line*: each line is followed by its translation, and the disclaimer gets a second paragraph. *Side by side*: translated lines sit in two columns (language 1 | language 2), and lines left untranslated run across both. Numbers, email and links are shared either way. Standard confidentiality notices in English, French, Chinese, Spanish and German.
 - **Affiliations:** up to five groups, networks or associations, in a footer under the signature. Each has optional text, link and logo; the logo's width and height can be set (24 px high by default, proportions kept unless unlocked), and logos without text line up side by side.
 - **Disclaimer:** free text under the signature, with a standard confidentiality notice one click away.

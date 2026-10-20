@@ -154,7 +154,8 @@
         <div class="field">
           <label for="f-website">Website</label>
           <input id="f-website" name="website" type="url" placeholder="example.com">
-          <span class="hint">The company name and the logo link here; no separate line in the signature.</span>
+          <span class="hint">The company name and the logo link here.</span>
+          <label class="check" for="f-show-site"><input id="f-show-site" name="show_site" type="checkbox"> Also show it at the start of the links line</label>
         </div>
         <div class="field">
           <label for="f-address">Address</label>
@@ -193,7 +194,8 @@
             <input id="f-wechat" name="wechat" type="text" placeholder="Optional">
           </div>
         </div>
-        <label class="check" for="f-labels"><input id="f-labels" name="labels" type="checkbox"> Mark phone, mobile and email with T, M and E</label>
+        <label class="check" for="f-icons"><input id="f-icons" name="icons" type="checkbox"> Small icons before phone, mobile, WeChat and address</label>
+        <p class="hint">Icons are tiny images loaded from this site, in the grey closest to your Details colour. Hovering one shows what it is.</p>
       </fieldset>
 
       <fieldset class="group">
@@ -402,6 +404,10 @@
         <dd>An uploaded image is never put online: the page shrinks it and embeds it in the signature's HTML, so it has no link. Apple Mail and Outlook send it with each email; Gmail removes it. Put the image online (your website, a CDN, a public GitHub file) and paste its link under <b>Image link</b>, at least twice the width you display.</dd>
       </div>
       <div>
+        <dt>Where do the icons come from?</dt>
+        <dd>Mail apps can't draw icons, so each one is a small PNG hosted with this page, in the grey closest to your Details colour. If a mail app blocks images until the reader allows them, a word such as "Phone" shows instead. Untick the icons option to leave them out.</dd>
+      </div>
+      <div>
         <dt>Rounded corners look square</dt>
         <dd>Classic Outlook for Windows ignores rounded corners and draws them square. Every other common app shows them.</dd>
       </div>
@@ -412,6 +418,10 @@
       <div>
         <dt>Where are my details kept?</dt>
         <dd>Only in this browser's storage, uploaded image included, so the page remembers them next time. Nothing is sent anywhere. A brand link carries your brand settings in the link itself, never your personal details.</dd>
+      </div>
+      <div>
+        <dt>Can I host my own copy?</dt>
+        <dd>Yes. The page is open source (MIT): fork it on GitHub and publish it with GitHub Pages, and signatures made there load their icons from your own site.</dd>
       </div>
     </dl>
   </section>
