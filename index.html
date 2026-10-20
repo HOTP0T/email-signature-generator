@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Email Signature Generator</title>
+<meta name="description" content="Build an HTML email signature for Gmail, Outlook and Apple Mail with your own logo, colours and disclaimer. Free, and it runs in your browser: nothing is uploaded.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M7 20.5c2.6 0 3.4-9 6-9s1.4 9 4 9 2.6-5.5 4.6-5.5 1.4 3.5 3.4 3.5"/></svg>
+      <h1 class="wordmark">Email signature generator</h1>
+    </div>
+    <p class="lede">Build an HTML email signature for Gmail, Outlook and Apple Mail, with your own logo, colours and disclaimer. It runs in your browser: nothing you type is uploaded.</p>
+  </header>
+
+  <div class="notice" id="notice" role="status" hidden>
+    <p id="notice-text"></p>
+    <button type="button" class="linkbtn" id="notice-close">Dismiss</button>
+  </div>
+
+  <main class="layout">
+
+    <section class="preview-col" aria-labelledby="pv-title">
+      <div class="preview-sticky">
+        <div class="pv-head">
+          <h2 class="label" id="pv-title">Preview</h2>
+          <span class="pv-sub">As a recipient sees it</span>
+        </div>
+
+        <div class="paper">
+          <div class="mail-head"><span>Subject</span><b>Proposal for the spring catalogue</b></div>
+          <div class="mail-body">
+            <p>Hi Sam,</p>
+            <p>Thanks for the call today. The proposal is attached; tell me if anything needs changing.</p>
+            <p>Best regards,</p>
+            <div class="sig-scroll"><div id="sig"></div></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="copy-rich" data-label="Copy signature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <span>Copy signature</span>
+          </button>
+          <button type="button" class="btn" id="copy-html" data-label="Copy HTML">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>Copy HTML</span>
+          </button>
+          <button type="button" class="btn" id="copy-text" data-label="Copy plain text">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>
+            <span>Copy plain text</span>
+          </button>
+          <button type="button" class="btn" id="download" data-label="Download .html">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Download .html</span>
+          </button>
+        </div>
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+
+        <ul class="warnings" id="warnings"></ul>
+
+        <div class="meter" id="meter">
+          <div class="meter-row"><span>Gmail size limit</span><span id="meter-text"></span></div>
+          <div class="meter-bar"><span id="meter-fill"></span></div>
+        </div>
+
+        <div class="team">
+          <div>
+            <h3>Brand link for your team</h3>
+            <p>Opens this page with your logo, colours, company details and disclaimer filled in. Teammates add their own name and contacts.</p>
+          </div>
+          <button type="button" class="btn" id="share-brand" data-label="Copy brand link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Copy brand link</span>
+          </button>
+        </div>
+
+        <details class="code" id="code-box">
+          <summary>HTML code</summary>
+          <pre id="code"></pre>
+        </details>
+      </div>
+    </section>
+
+    <form class="editor" id="form" autocomplete="off" novalidate>
+      <div class="editor-intro">
+        <p id="intro-text">The form starts with example details. Replace them with yours.</p>
+        <div class="intro-actions">
+          <button type="button" class="linkbtn" id="clear">Clear all fields</button>
+          <button type="button" class="linkbtn" id="reset">Reset to example</button>
+        </div>
+      </div>
+
+      <fieldset class="group">
+        <legend>You</legend>
+        <div class="field">
+          <label for="f-name">Full name</label>
+          <input id="f-name" name="name" type="text">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-title">Job title</label>
+            <input id="f-title" name="title" type="text">
+          </div>
+          <div class="field">
+            <label for="f-pronouns">Pronouns</label>
+            <input id="f-pronouns" name="pronouns" type="text" placeholder="Optional, e.g. she/her">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-company">Company</label>
+          <input id="f-company" name="company" type="text">
+        </div>
+        <div class="field">
+          <label for="f-tagline">Tagline</label>
+          <input id="f-tagline" name="tagline" type="text" placeholder="Optional">
+          <label class="check" for="f-tagline-caps"><input id="f-tagline-caps" name="tagline_caps" type="checkbox"> Small capitals (otherwise italic)</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Contact</legend>
+        <div class="row2">
+          <div class="field">
+            <label for="f-phone">Phone</label>
+            <input id="f-phone" name="phone" type="tel">
+          </div>
+          <div class="field">
+            <label for="f-mobile">Mobile</label>
+            <input id="f-mobile" name="mobile" type="tel">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" name="email" type="email">
+        </div>
+        <div class="field">
+          <label for="f-website">Website</label>
+          <input id="f-website" name="website" type="url" placeholder="example.com">
+        </div>
+        <div class="field">
+          <label for="f-address">Address</label>
+          <input id="f-address" name="address" type="text">
+        </div>
+        <div class="field">
+          <label for="f-wechat">WeChat ID</label>
+          <input id="f-wechat" name="wechat" type="text" placeholder="Optional">
+        </div>
+        <label class="check" for="f-labels"><input id="f-labels" name="labels" type="checkbox"> Label each line with T, M, E and W</label>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Links</legend>
+        <p class="group-hint">Paste full profile links. Empty ones are left out.</p>
+        <div class="row2">
+          <div class="field"><label for="f-linkedin">LinkedIn</label><input id="f-linkedin" name="linkedin" type="url"></div>
+          <div class="field"><label for="f-x">X</label><input id="f-x" name="x" type="url"></div>
+          <div class="field"><label for="f-github">GitHub</label><input id="f-github" name="github" type="url"></div>
+          <div class="field"><label for="f-instagram">Instagram</label><input id="f-instagram" name="instagram" type="url"></div>
+          <div class="field"><label for="f-facebook">Facebook</label><input id="f-facebook" name="facebook" type="url"></div>
+          <div class="field"><label for="f-youtube">YouTube</label><input id="f-youtube" name="youtube" type="url"></div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-cta-label">Button link text</label>
+            <input id="f-cta-label" name="cta_label" type="text" placeholder="e.g. Book a call">
+          </div>
+          <div class="field">
+            <label for="f-cta-url">Button link address</label>
+            <input id="f-cta-url" name="cta_url" type="url" placeholder="https://…">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Logo or photo</legend>
+        <div class="field">
+          <span class="field-label" id="l-logo-type">Show</span>
+          <div class="seg" role="radiogroup" aria-labelledby="l-logo-type">
+            <label><input type="radio" id="f-logo-none" name="logo_type" value="none"><span>Nothing</span></label>
+            <label><input type="radio" id="f-logo-initials" name="logo_type" value="initials"><span>Initials</span></label>
+            <label><input type="radio" id="f-logo-image" name="logo_type" value="image"><span>Image</span></label>
+          </div>
+        </div>
+
+        <div class="field" data-when="logo_type=initials">
+          <label for="f-logo-initials-text">Letters</label>
+          <input id="f-logo-initials-text" name="logo_initials" type="text" maxlength="3" placeholder="Taken from the company name">
+          <span class="hint">Drawn in your accent colour, so it needs no image.</span>
+        </div>
+
+        <div class="field" data-when="logo_type=image">
+          <label for="f-logo-url">Image link</label>
+          <input id="f-logo-url" name="logo_url" type="url" placeholder="https://example.com/logo.png">
+          <span class="hint">A PNG or JPEG that anyone can open. This is the only way the image shows in Gmail.</span>
+          <div class="upload-row">
+            <label class="btn small" for="f-logo-file">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              <span>Upload instead</span>
+            </label>
+            <input id="f-logo-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" class="visually-hidden">
+            <span class="chip" id="upload-chip" hidden><span id="upload-name"></span><button type="button" class="chip-x" id="upload-remove" aria-label="Remove uploaded image">×</button></span>
+          </div>
+        </div>
+
+        <div data-when="logo_type!=none" class="logo-opts">
+          <div class="field">
+            <label for="f-logo-size">Width <output id="size-out" for="f-logo-size"></output></label>
+            <input id="f-logo-size" name="logo_size" type="range" min="32" max="128" step="4">
+          </div>
+          <div class="field">
+            <span class="field-label" id="l-shape">Corners</span>
+            <div class="seg" role="radiogroup" aria-labelledby="l-shape">
+              <label><input type="radio" id="f-shape-square" name="logo_shape" value="square"><span>Square</span></label>
+              <label><input type="radio" id="f-shape-rounded" name="logo_shape" value="rounded"><span>Rounded</span></label>
+              <label><input type="radio" id="f-shape-circle" name="logo_shape" value="circle"><span>Circle</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-logo-link">Logo opens</label>
+            <input id="f-logo-link" name="logo_link" type="url" placeholder="Your website">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Style</legend>
+        <div class="field">
+          <span class="field-label" id="l-layout">Layout</span>
+          <div class="seg" role="radiogroup" aria-labelledby="l-layout">
+            <label><input type="radio" id="f-layout-side" name="layout" value="side"><span>Logo beside</span></label>
+            <label><input type="radio" id="f-layout-stacked" name="layout" value="stacked"><span>Logo above</span></label>
+          </div>
+        </div>
+        <div class="colors">
+          <div class="color-field">
+            <label for="f-accent">Accent</label>
+            <div class="color-input"><input type="color" id="f-accent" name="accent"><input type="text" id="f-accent-hex" data-hex-for="accent" maxlength="7" spellcheck="false" aria-label="Accent colour as hex"></div>
+          </div>
+          <div class="color-field">
+            <label for="f-text">Name</label>
+            <div class="color-input"><input type="color" id="f-text" name="text"><input type="text" id="f-text-hex" data-hex-for="text" maxlength="7" spellcheck="false" aria-label="Name colour as hex"></div>
+          </div>
+          <div class="color-field">
+            <label for="f-muted">Details</label>
+            <div class="color-input"><input type="color" id="f-muted" name="muted"><input type="text" id="f-muted-hex" data-hex-for="muted" maxlength="7" spellcheck="false" aria-label="Details colour as hex"></div>
+          </div>
+          <div class="color-field">
+            <label for="f-divider-color">Lines</label>
+            <div class="color-input"><input type="color" id="f-divider-color" name="divider_color"><input type="text" id="f-divider-color-hex" data-hex-for="divider_color" maxlength="7" spellcheck="false" aria-label="Line colour as hex"></div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-font">Font</label>
+            <select id="f-font" name="font">
+              <option value="system">System (Apple, Segoe, Roboto)</option>
+              <option value="arial">Arial / Helvetica</option>
+              <option value="verdana">Verdana</option>
+              <option value="tahoma">Tahoma</option>
+              <option value="trebuchet">Trebuchet MS</option>
+              <option value="georgia">Georgia</option>
+              <option value="times">Times New Roman</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-size">Text size</label>
+            <select id="f-size" name="size">
+              <option value="12">12 px</option>
+              <option value="13">13 px</option>
+              <option value="14">14 px</option>
+              <option value="15">15 px</option>
+            </select>
+          </div>
+        </div>
+        <label class="check" for="f-divider"><input id="f-divider" name="divider" type="checkbox"> Divider lines</label>
+        <p class="group-hint">Mail apps only have the fonts installed on the reader's computer, so the list keeps to those.</p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Disclaimer</legend>
+        <div class="field">
+          <label for="f-disclaimer" class="visually-hidden">Disclaimer text</label>
+          <textarea id="f-disclaimer" name="disclaimer" rows="5" placeholder="Optional"></textarea>
+          <span class="hint">Small print under the signature. Line breaks are kept. <button type="button" class="linkbtn inline" id="std-disclaimer">Insert a standard confidentiality notice</button></span>
+        </div>
+      </fieldset>
+
+      <p class="saved" id="saved" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <section class="guide" aria-labelledby="g-install">
+    <h2 class="label" id="g-install">Install it</h2>
+    <div class="apps">
+      <article class="app">
+        <h3>Gmail</h3>
+        <ol>
+          <li>Click the gear, then <b>See all settings</b>.</li>
+          <li>On <b>General</b>, scroll to <b>Signature</b> and click <b>Create new</b>.</li>
+          <li>Paste after <b>Copy signature</b>.</li>
+          <li>Choose it under <b>For new emails use</b> and <b>On reply/forward use</b>.</li>
+          <li>Click <b>Save Changes</b> at the bottom.</li>
+        </ol>
+      </article>
+      <article class="app">
+        <h3>Outlook</h3>
+        <ol>
+          <li>New Outlook or the web: <b>Settings → Account → Signatures</b>.</li>
+          <li>Create a signature, name it and paste.</li>
+          <li>Set it as the default for new messages and replies, then <b>Save</b>.</li>
+        </ol>
+        <p class="aside">Classic Outlook for Windows: File → Options → Mail → Signatures.</p>
+      </article>
+      <article class="app">
+        <h3>Apple Mail</h3>
+        <ol>
+          <li><b>Mail → Settings → Signatures</b>.</li>
+          <li>Select your account and click <b>+</b>.</li>
+          <li>Untick <b>Always match my default message font</b>.</li>
+          <li>Select the placeholder text, paste, and close the window.</li>
+        </ol>
+      </article>
+      <article class="app">
+        <h3>Thunderbird</h3>
+        <ol>
+          <li><b>Account Settings</b> for your address.</li>
+          <li>Tick <b>Use HTML</b> under Signature text.</li>
+          <li>Paste after <b>Copy HTML</b>.</li>
+        </ol>
+        <p class="aside">Or tick <b>Attach the signature from a file</b> and choose the downloaded .html.</p>
+      </article>
+    </div>
+
+    <h2 class="label" id="g-faq">Good to know</h2>
+    <dl class="faq" aria-labelledby="g-faq">
+      <div>
+        <dt>My logo doesn't show in Gmail</dt>
+        <dd>Gmail removes images that are embedded in the signature. Put the image online (your website, a CDN, a public GitHub file) and paste its link under <b>Image link</b>. Use a PNG or JPEG at least twice the width you display.</dd>
+      </div>
+      <div>
+        <dt>Rounded corners look square</dt>
+        <dd>Classic Outlook for Windows ignores rounded corners and draws them square. Every other common app shows them.</dd>
+      </div>
+      <div>
+        <dt>Colours change in dark mode</dt>
+        <dd>Some mail apps recolour text when the reader uses dark mode. Mid-tone accents and a logo with its own background hold up best.</dd>
+      </div>
+      <div>
+        <dt>Where are my details kept?</dt>
+        <dd>Only in this browser's storage, so the page remembers them next time. Nothing is sent anywhere. A brand link carries your brand settings in the link itself, never your personal details.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <footer class="foot">
+    <p>The signature is table-based HTML with inline styles, the markup Gmail, Outlook and Apple Mail all keep. <a href="https://github.com/HOTP0T/email-signature-generator">Source code on GitHub</a> (MIT licence).</p>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
