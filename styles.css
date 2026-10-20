@@ -236,6 +236,35 @@ input[type="range"] { width: 100%; accent-color: var(--primary); margin: 4px 0; 
 .chip-x:hover { background: var(--line); color: var(--ink); }
 .chip-x:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 
+/* Affiliations */
+.aff-list { display: grid; gap: 14px; }
+.aff-list:empty { display: none; }
+.aff-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  grid-template-areas: "text remove" "url url";
+  gap: 8px;
+  align-items: end;
+}
+.aff-row + .aff-row { padding-top: 14px; border-top: 1px solid var(--line); }
+.aff-text { grid-area: text; }
+.aff-url { grid-area: url; }
+.aff-row .icon-btn { grid-area: remove; }
+.opt { color: var(--muted); font-weight: 400; }
+.add-btn { justify-self: start; }
+.icon-btn {
+  width: 36px; height: 36px; padding: 0;
+  display: inline-grid; place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn:hover { background: var(--sunken); color: var(--ink); }
+.icon-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
 /* Colours */
 .colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
 .color-field { display: grid; gap: 6px; min-width: 0; }

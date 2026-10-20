@@ -9,7 +9,8 @@ It is three static files (`index.html`, `styles.css`, `app.js`). There is no bui
 ## What it does
 
 - **Your brand:** logo or photo (image link or upload), or initials drawn in your accent colour; accent, name, details and line colours; font; text size; logo beside or above the details.
-- **Your details:** name, pronouns, job title, company, tagline, phone, mobile, email, website, address, WeChat ID, six social links and a button link ("Book a call →").
+- **Your details:** name, job title, company, tagline, phone, mobile, email, website, address, WeChat ID, six social links and a button link ("Book a call →").
+- **Affiliations:** up to five lines for the groups, networks or associations you belong to ("An independent member of …"), each with an optional link.
 - **Disclaimer:** free text under the signature, with a standard confidentiality notice one click away.
 - **Output:** copy as a ready-to-paste signature, copy the HTML, copy plain text, or download an `.html` file.
 - **Checks as you type:** Gmail's 10,000-character limit, uploaded images that Gmail will remove, image links that don't load, images too small for high-resolution screens.
@@ -25,6 +26,8 @@ Mail apps strip stylesheets, scripts and most modern CSS. The signature is built
 - fonts every computer has, because web fonts fall back in most mail apps;
 - image width and height written out, which Outlook needs;
 - logos referenced by link: Gmail removes images embedded in a signature.
+
+An uploaded logo is never put online. The page shrinks it to 256 px at most and embeds it in the signature's HTML as a `data:` address, and keeps it in the browser's storage. Apple Mail and Outlook send it with each email; Gmail removes it, so the page asks for an image link for Gmail users.
 
 ## Run it locally
 

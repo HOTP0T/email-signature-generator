@@ -6,6 +6,7 @@
   var STORE = "email-signature-generator.v1";
   var GMAIL_LIMIT = 10000;
   var UPLOAD_MAX_PX = 256; // twice the widest logo the form offers
+  var MAX_AFF = 5;
 
   // Fonts every reader has; a web font would silently fall back in most mail apps.
   var FONTS = {
@@ -34,10 +35,10 @@
   var EXAMPLE = {
     name: "Alex Morgan",
     title: "Head of Operations",
-    pronouns: "",
     company: "Northwind Studio",
     tagline: "Design and print for independent brands",
     tagline_caps: true,
+    affiliations: [{ text: "Founding member of the Independent Print Network", url: "" }],
     phone: "+1 415 555 0134",
     mobile: "",
     email: "alex@northwind.example",
@@ -85,10 +86,10 @@
   var COLORS = ["accent", "text", "muted", "divider_color"];
   var NUMBERS = ["logo_size", "size"];
   // What a brand link carries. Personal details never go into a link.
-  var BRAND = ["company", "tagline", "tagline_caps", "website", "address", "labels", "disclaimer",
+  var BRAND = ["company", "tagline", "tagline_caps", "affiliations", "website", "address", "labels", "disclaimer",
     "logo_type", "logo_initials", "logo_url", "logo_size", "logo_shape", "logo_link",
     "layout", "accent", "text", "muted", "divider", "divider_color", "font", "size"];
-  var PERSONAL = ["name", "title", "pronouns", "phone", "mobile", "email", "wechat",
+  var PERSONAL = ["name", "title", "phone", "mobile", "email", "wechat",
     "linkedin", "x", "github", "instagram", "facebook", "youtube", "cta_label", "cta_url"];
 
   /* ---------- helpers ---------- */
@@ -147,6 +148,13 @@
     Object.keys(EXAMPLE).forEach(function (k) {
       if (!Object.prototype.hasOwnProperty.call(src, k)) return;
       var v = src[k], def = EXAMPLE[k];
+      if (k === "affiliations") {
+        if (!Array.isArray(v)) return;
+        out[k] = v.filter(function (a) { return a && typeof a.text === "string" && typeof a.url === "string"; })
+          .slice(0, MAX_AFF)
+          .map(function (a) { return { text: a.text.slice(0, 300), url: a.url.slice(0, 1000) }; });
+        return;
+      }
       if (typeof v !== typeof def) return;
       if (CHOICES[k] && CHOICES[k].indexOf(v) < 0) return;
       if (RANGES[k]) v = Math.min(RANGES[k][1], Math.max(RANGES[k][0], Math.round(v) || 0));
@@ -159,6 +167,12 @@
       out[k] = v;
     });
     return out;
+  }
+  // A copy of the example whose list can't be changed through the state.
+  function freshExample() {
+    var s = Object.assign({}, EXAMPLE);
+    s.affiliations = EXAMPLE.affiliations.map(function (a) { return Object.assign({}, a); });
+    return s;
   }
   function pick(obj, keys) {
     var out = {};
@@ -231,12 +245,8 @@
     var rows = [];
     function gap(px) { return rows.length ? "padding-top:" + px + "px;" : ""; }
 
-    var name = s.name.trim(), pron = s.pronouns.trim();
-    if (name) {
-      rows.push(row(esc(name) + (pron
-        ? '<span style="font-size:' + (base - 1) + "px;font-weight:400;color:" + s.muted + ';">&nbsp;&nbsp;(' + esc(pron) + ")</span>"
-        : ""), "font-size:" + (base + 3) + "px;line-height:" + (lh + 4) + "px;font-weight:700;color:" + s.text + ";"));
-    }
+    var name = s.name.trim();
+    if (name) rows.push(row(esc(name), "font-size:" + (base + 3) + "px;line-height:" + (lh + 4) + "px;font-weight:700;color:" + s.text + ";"));
     var role = [];
     if (s.title.trim()) role.push(esc(s.title.trim()));
     if (s.company.trim()) role.push('<span style="color:' + s.text + ';font-weight:600;">' + esc(s.company.trim()) + "</span>");
@@ -264,6 +274,16 @@
 
     var cta = s.cta_label.trim(), ctaUrl = webUrl(s.cta_url);
     if (cta && ctaUrl) rows.push(row(link(ctaUrl, esc(cta) + "&nbsp;&rarr;", s.accent, "font-weight:700;"), line + gap(8)));
+
+    var firstAff = true;
+    s.affiliations.forEach(function (a) {
+      var t = a.text.trim();
+      if (!t) return;
+      var u = webUrl(a.url);
+      rows.push(row(u ? link(u, esc(t), s.muted, "text-decoration:underline;") : esc(t),
+        "font-size:" + (base - 1) + "px;line-height:" + (lh - 1) + "px;color:" + s.muted + ";" + (firstAff ? gap(10) : "")));
+      firstAff = false;
+    });
 
     var tagline = s.tagline.trim();
     if (tagline) {
@@ -305,8 +325,7 @@
   function buildText(s) {
     var out = [];
     function lab(letter, v, always) { return (s.labels || always) ? letter + " " + v : v; }
-    var name = s.name.trim(), pron = s.pronouns.trim();
-    if (name) out.push(name + (pron ? " (" + pron + ")" : ""));
+    if (s.name.trim()) out.push(s.name.trim());
     var role = [s.title.trim(), s.company.trim()].filter(Boolean).join(" · ");
     if (role) out.push(role);
     var phones = [];
@@ -323,6 +342,10 @@
     out = out.concat(social);
     var ctaUrl = webUrl(s.cta_url);
     if (s.cta_label.trim() && ctaUrl) out.push(s.cta_label.trim() + ": " + ctaUrl);
+    s.affiliations.forEach(function (a) {
+      var u = webUrl(a.url);
+      if (a.text.trim()) out.push(a.text.trim() + (u ? " (" + shortUrl(u) + ")" : ""));
+    });
     if (s.tagline.trim()) out.push(s.tagline.trim());
     var text = out.join("\n"), note = s.disclaimer.trim();
     return note ? (text ? text + "\n\n" : "") + note : text;
@@ -359,11 +382,14 @@
 
   var saved = readSaved();
   var brand = readBrandHash();
-  var state = Object.assign({}, EXAMPLE, saved || {});
+  var state = Object.assign(freshExample(), saved || {});
+  // Example lines never join details someone saved before this field existed.
+  if (saved && !saved.affiliations) state.affiliations = [];
   var fromBrandLink = false;
   if (brand) {
     if (!saved) PERSONAL.forEach(function (k) { state[k] = ""; });
     Object.assign(state, brand);
+    if (!brand.affiliations) state.affiliations = [];
     state.logo_upload = "";
     state.logo_upload_name = "";
     state.logo_nw = state.logo_nh = 0;
@@ -381,10 +407,29 @@
   var warningsEl = document.getElementById("warnings");
   var savedEl = document.getElementById("saved");
   var fileInput = document.getElementById("f-logo-file");
+  var affList = document.getElementById("aff-list");
+  var affAdd = document.getElementById("aff-add");
   var html = "";
   var imgStatus = "none"; // none | loading | ok | error
 
+  // Rebuilt only when rows are added or removed, so typing never loses focus.
+  function renderAffRows() {
+    var x = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+    affList.innerHTML = state.affiliations.map(function (a, i) {
+      var n = i + 1;
+      return '<div class="aff-row">' +
+        '<div class="field aff-text"><label for="f-aff-' + i + '-text">Affiliation ' + n + "</label>" +
+        '<input id="f-aff-' + i + '-text" type="text" data-aff="' + i + '" data-field="text" placeholder="e.g. An independent member of …" value="' + esc(a.text) + '"></div>' +
+        '<button type="button" class="icon-btn" data-aff-remove="' + i + '" aria-label="Remove affiliation ' + n + '">' + x + "</button>" +
+        '<div class="field aff-url"><label for="f-aff-' + i + '-url">Link <span class="opt">optional</span></label>' +
+        '<input id="f-aff-' + i + '-url" type="url" data-aff="' + i + '" data-field="url" placeholder="https://…" value="' + esc(a.url) + '"></div>' +
+        "</div>";
+    }).join("");
+    affAdd.hidden = state.affiliations.length >= MAX_AFF;
+  }
+
   function fillForm() {
+    renderAffRows();
     Array.prototype.forEach.call(form.elements, function (el) {
       var k = el.name;
       if (!k || !(k in state) || el.type === "file") return;
@@ -409,6 +454,7 @@
     document.getElementById("size-out").textContent = state.logo_size + " px";
     var chip = document.getElementById("upload-chip");
     chip.hidden = !state.logo_upload;
+    document.getElementById("upload-hint").hidden = !!state.logo_upload;
     document.getElementById("upload-name").textContent = state.logo_upload ? (state.logo_upload_name || "Uploaded image") + ", used instead of the link" : "";
   }
 
@@ -421,7 +467,7 @@
     var w = [];
     if (s.logo_type === "image") {
       if (s.logo_upload) {
-        w.push(["warn", "Gmail removes uploaded images from signatures. To show the logo in Gmail, put the image online and paste its link under Image link. Apple Mail and Outlook keep uploaded images."]);
+        w.push(["warn", "The uploaded image is embedded in the signature itself: it isn't put online and has no link. Apple Mail and Outlook send it with each email, but Gmail removes it. For Gmail, put the image online and paste its link under Image link."]);
       } else if (!s.logo_url.trim()) {
         w.push(["info", "Paste a link to your logo or photo, or upload an image."]);
       } else if (!imageUrl(s)) {
@@ -508,6 +554,18 @@
       }
       return;
     }
+    if (el.dataset && el.dataset.aff !== undefined) {
+      var i = Number(el.dataset.aff), f = el.dataset.field;
+      if (!state.affiliations[i] || state.affiliations[i][f] === el.value) return;
+      state.affiliations = state.affiliations.map(function (a, j) {
+        if (j !== i) return a;
+        var c = Object.assign({}, a);
+        c[f] = el.value;
+        return c;
+      });
+      changed();
+      return;
+    }
     var k = el.name;
     if (!k || !(k in state) || el.type === "file") return;
     var val;
@@ -568,13 +626,31 @@
     changed();
   });
 
+  affAdd.addEventListener("click", function () {
+    if (state.affiliations.length >= MAX_AFF) return;
+    state.affiliations = state.affiliations.concat([{ text: "", url: "" }]);
+    renderAffRows();
+    changed();
+    document.getElementById("f-aff-" + (state.affiliations.length - 1) + "-text").focus();
+  });
+  affList.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-aff-remove]");
+    if (!btn) return;
+    var i = Number(btn.getAttribute("data-aff-remove"));
+    state.affiliations = state.affiliations.filter(function (_, j) { return j !== i; });
+    renderAffRows();
+    changed();
+    var next = state.affiliations.length ? document.getElementById("f-aff-" + Math.min(i, state.affiliations.length - 1) + "-text") : affAdd;
+    next.focus();
+  });
+
   document.getElementById("std-disclaimer").addEventListener("click", function () {
     state.disclaimer = STANDARD_DISCLAIMER;
     fillForm();
     changed();
   });
   document.getElementById("reset").addEventListener("click", function () {
-    state = Object.assign({}, EXAMPLE);
+    state = freshExample();
     imgStatus = "none";
     fillForm();
     changed();
@@ -584,6 +660,7 @@
     Object.keys(EXAMPLE).forEach(function (k) {
       if (typeof EXAMPLE[k] === "string" && COLORS.indexOf(k) < 0 && !CHOICES[k]) state[k] = "";
     });
+    state.affiliations = [];
     state.logo_nw = state.logo_nh = 0;
     imgStatus = "none";
     fillForm();
